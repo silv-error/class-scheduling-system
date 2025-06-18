@@ -26,3 +26,17 @@ export const accessRoute = async (req, res, next) => {
     next(error);
   }
 };
+
+export const adminAccess = async (req, res, next) => {
+  if (req.user && req.user.role === "admin") {
+    return next();
+  }
+  res.status(403).json({ error: "Forbidden: Admin role is required" });
+};
+
+export const instructorAccess = async (req, res, next) => {
+  if (req.user && req.user.role === "instructor") {
+    return next();
+  }
+  res.status(403).json({ error: "Forbidden: Instructor role is required" });
+};

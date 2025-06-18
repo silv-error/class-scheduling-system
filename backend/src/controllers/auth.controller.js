@@ -30,7 +30,7 @@ export const signup = async (req, res, next) => {
     generateAccessToken(user._id, res);
     await user.save();
 
-    res.status(200).json({ ...user._doc, password: undefined });
+    res.status(201).json({ ...user._doc, password: undefined });
   } catch (error) {
     logger.error(`Error in signup controller: ${error.message}`);
     next(error);

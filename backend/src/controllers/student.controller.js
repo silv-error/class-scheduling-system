@@ -8,8 +8,10 @@ export const getAllCourses = async (req, res, next) => {
         $nin: [req.user._id],
       },
     })
+      .populate("instructor")
       .select("-code")
-      .lean();
+      .lean()
+      .sort({ createdAt: -1 });
 
     res.status(200).json(courses);
   } catch (error) {
@@ -80,6 +82,28 @@ export const addCourse = async (req, res, next) => {
     res.status(200).json(updatedCourse);
   } catch (error) {
     logger.error(`Error in addCourse controller: ${error.message}`);
+    next(error);
+  }
+};
+
+export const deleteCourse = async (req, res, next) => {
+  try {
+    const courseId = req.params.id;
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+
+    await Course.findByIdAndUpdate(courseId, {
+      $pull: {
+        students: req.user._id,
+      },
+    });
+
+    res.status(200).json({ message: "Course deleted successfully" });
+  } catch (error) {
+    logger.error(`Error in deleteCourse controller: ${error.message}`);
     next(error);
   }
 };

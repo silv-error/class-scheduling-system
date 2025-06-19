@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import logger from "../libs/logger.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const accessRoute = async (req, res, next) => {
   try {

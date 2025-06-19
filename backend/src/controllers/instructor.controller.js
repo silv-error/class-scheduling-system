@@ -26,10 +26,10 @@ export const getCourse = async (req, res, next) => {
 
 export const addSchedule = async (req, res, next) => {
   try {
-    const { startTime, endTime, room, type } = req.body;
     const { id } = req.params;
+    const { startTime, endTime, room, type, day, date } = req.body;
 
-    const newSchedule = await Schedule.create({ startTime, endTime, room, type });
+    const newSchedule = await Schedule.create({ startTime, endTime, room, type, day, date });
     const updatedCourse = await Course.findByIdAndUpdate(
       id,
       {
@@ -50,7 +50,7 @@ export const addSchedule = async (req, res, next) => {
 export const deleteSchedule = async (req, res, next) => {
   try {
     const { courseId, scheduleId } = req.params;
-    const updatedCourse = await Course.findByIdAndUpdate(
+    await Course.findByIdAndUpdate(
       courseId,
       {
         $pull: {
@@ -59,7 +59,7 @@ export const deleteSchedule = async (req, res, next) => {
       },
       { new: true }
     );
-    await Schedule.findByIdAndDelete(updatedCourse);
+    await Schedule.findByIdAndDelete(scheduleId);
     res.status(200).json({ error: "Schedule deleted successfully" });
   } catch (error) {
     logger.error(`Error in deleteSchedule controller: ${error.message}`);
@@ -69,17 +69,17 @@ export const deleteSchedule = async (req, res, next) => {
 
 export const updateSchedule = async (req, res, next) => {
   try {
-    const { startTime, endTime, room } = req.body;
+    const { startTime, endTime, room, day, date } = req.body;
     const { id } = req.params;
 
     const schedule = await Schedule.findById(id);
     if (!schedule) return res.status(404).json({ error: "Schedule not found" });
 
-    Promise.all([
-      (schedule.startTime = startTime || schedule.startTime),
-      (schedule.endTime = endTime || schedule.endTime),
-      (schedule.room = room || schedule.room),
-    ]);
+    schedule.startTime = startTime || schedule.startTime;
+    schedule.endTime = endTime || schedule.endTime;
+    schedule.room = room || schedule.room;
+    schedule.day = day || schedule.day;
+    schedule.date = date || schedule.date;
 
     await schedule.save();
     res.status(200).json(schedule);

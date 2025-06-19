@@ -15,8 +15,9 @@ export const getAllCourses = async (_, res, next) => {
 
 export const addCourse = async (req, res, next) => {
   try {
-    const { subject, course, instructor } = req.body;
-    if (!subject || !course || !instructor) {
+    const { subject, course, description, startTime, endTime, day, instructor } = req.body;
+
+    if (!subject || !course || !description || !startTime || !endTime || !day || !instructor) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
@@ -25,9 +26,17 @@ export const addCourse = async (req, res, next) => {
       return res.status(400).json({ error: "This user is not an instructor" });
     }
 
+    if (new Date(endTime) <= new Date(startTime)) {
+      return res.status(400).json({ error: "End time must be after start time." });
+    }
+
     const newCourse = await Course.create({
       subject,
       course,
+      description,
+      startTime,
+      endTime,
+      day,
       instructor,
       code: generateUniqueCode(),
     });
@@ -41,19 +50,25 @@ export const addCourse = async (req, res, next) => {
 
 export const updateCourse = async (req, res, next) => {
   try {
-    const { subject, course, instructor } = req.body;
+    const { subject, course, description, startTime, endTime, day, instructor } = req.body;
     const { id } = req.params;
 
     let existingCourse = await Course.findById(id);
     if (!existingCourse) {
-      return res.status(400).json({ error: "Course not found" });
+      return res.status(404).json({ error: "Course not found" });
     }
 
-    Promise.all([
-      (existingCourse.subject = subject || existingCourse.subject),
-      (existingCourse.course = course || existingCourse.course),
-      (existingCourse.instructor = instructor || existingCourse.instructor),
-    ]);
+    existingCourse.subject = subject || existingCourse.subject;
+    existingCourse.course = course || existingCourse.course;
+    existingCourse.description = description || existingCourse.description;
+    existingCourse.startTime = startTime || existingCourse.startTime;
+    existingCourse.endTime = endTime || existingCourse.endTime;
+    existingCourse.day = day || existingCourse.day;
+    existingCourse.instructor = instructor || existingCourse.instructor;
+
+    if (new Date(existingCourse.endTime) <= new Date(existingCourse.startTime)) {
+      return res.status(400).json({ error: "End time must be after start time." });
+    }
 
     await existingCourse.save();
     res.status(200).json(existingCourse);
@@ -66,7 +81,10 @@ export const updateCourse = async (req, res, next) => {
 export const deleteCourse = async (req, res, next) => {
   try {
     const { id } = req.params;
-    await Course.findByIdAndDelete(id);
+    const deletedCourse = await Course.findByIdAndDelete(id);
+    if (!deletedCourse) {
+      return res.status(404).json({ error: "Course not found" });
+    }
     res.status(200).json({ message: "Course deleted successfully" });
   } catch (error) {
     logger.error(`Error in deleteCourse controller: ${error.message}`);

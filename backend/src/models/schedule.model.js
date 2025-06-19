@@ -3,11 +3,11 @@ import mongoose from "mongoose";
 const scheduleSchema = new mongoose.Schema(
   {
     startTime: {
-      type: Date,
+      type: String,
       required: true,
     },
     endTime: {
-      type: Date,
+      type: String,
       required: true,
     },
     room: {
@@ -17,6 +17,14 @@ const scheduleSchema = new mongoose.Schema(
     type: {
       type: String,
       enum: ["original", "makeup"],
+      required: true,
+    },
+    day: {
+      type: String,
+      required: true,
+    },
+    date: {
+      type: Date,
       required: true,
     },
   },
